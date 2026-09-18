@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.progress.json
+solutions/*.py
+.DS_Store

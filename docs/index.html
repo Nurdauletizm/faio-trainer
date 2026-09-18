@@ -1,0 +1,880 @@
+<meta charset="utf-8">
+<title>Тренажёр FAIO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Unbounded:wght@600&display=swap">
+<style>
+  :root {
+    --ground: #eaeef2;
+    --surface: #ffffff;
+    --surface-2: #f4f7f9;
+    --ink: #0f1820;
+    --muted: #5b6d7b;
+    --line: #d2dbe3;
+    --line-soft: #e3eaef;
+    --accent: #0b7e97;
+    --accent-soft: #d8eef3;
+    --gold: #9c6a06;
+    --gold-soft: #f7ecd4;
+    --ok: #16714a;
+    --ok-soft: #dcefe5;
+    --bad: #ab2d22;
+    --bad-soft: #f8e1de;
+    --shadow: 0 1px 2px rgba(15, 24, 32, .06), 0 8px 24px -16px rgba(15, 24, 32, .35);
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --display: "Unbounded", var(--body);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0a1015;
+      --surface: #121b23;
+      --surface-2: #17222b;
+      --ink: #dde7ee;
+      --muted: #8ba1b0;
+      --line: #223039;
+      --line-soft: #1b2831;
+      --accent: #45c6de;
+      --accent-soft: #10323c;
+      --gold: #e2ae4a;
+      --gold-soft: #2f2611;
+      --ok: #4cc287;
+      --ok-soft: #102b20;
+      --bad: #f2776a;
+      --bad-soft: #33170f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -18px rgba(0, 0, 0, .9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0a1015;
+    --surface: #121b23;
+    --surface-2: #17222b;
+    --ink: #dde7ee;
+    --muted: #8ba1b0;
+    --line: #223039;
+    --line-soft: #1b2831;
+    --accent: #45c6de;
+    --accent-soft: #10323c;
+    --gold: #e2ae4a;
+    --gold-soft: #2f2611;
+    --ok: #4cc287;
+    --ok-soft: #102b20;
+    --bad: #f2776a;
+    --bad-soft: #33170f;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -18px rgba(0, 0, 0, .9);
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .app {
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(250px, 300px) 1fr;
+    gap: 0;
+  }
+
+  /* ---------- левая колонка ---------- */
+  .rail {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .brand {
+    padding: 20px 20px 14px;
+    border-bottom: 1px solid var(--line-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .mark {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 19px;
+    letter-spacing: -.02em;
+  }
+  .mark em { font-style: normal; color: var(--accent); }
+  .brand span.sub {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: .02em;
+  }
+  .score {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line-soft);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .score .value {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .score .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  nav.tasks {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 8px 0 16px;
+  }
+  .topic {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    padding: 14px 20px 6px;
+  }
+  .task-btn {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    background: none;
+    border: 0;
+    border-left: 3px solid transparent;
+    text-align: left;
+    cursor: pointer;
+  }
+  .task-btn:hover { background: var(--surface-2); }
+  .task-btn[aria-current="true"] {
+    background: var(--accent-soft);
+    border-left-color: var(--accent);
+  }
+  .task-btn .tid {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .task-btn[aria-current="true"] .tid { color: var(--accent); }
+  .task-btn .name { font-size: 13.5px; }
+  .task-btn .pts {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .task-btn.done .name { color: var(--muted); }
+  .task-btn.done .pts { color: var(--ok); }
+  .rail-foot {
+    padding: 12px 20px 18px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  /* ---------- правая колонка ---------- */
+  .pane {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 24px 28px 48px;
+  }
+  .pane-inner { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+  .task-head { display: flex; flex-direction: column; gap: 6px; }
+  .task-head .kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--line-soft);
+    font-size: 11px;
+  }
+  .chip.gold { background: var(--gold-soft); border-color: transparent; color: var(--gold); }
+  .chip.ok { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+  .task-head h1 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(21px, 3.4vw, 27px);
+    letter-spacing: -.02em;
+    text-wrap: balance;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line-soft);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  pre.statement {
+    margin: 0;
+    padding: 16px 18px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+
+  textarea#code {
+    display: block;
+    width: 100%;
+    min-height: 300px;
+    resize: vertical;
+    border: 0;
+    padding: 14px 16px;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    tab-size: 4;
+  }
+  textarea#code:focus { outline: none; box-shadow: inset 0 0 0 2px var(--accent-soft); }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn[disabled] { opacity: .5; cursor: progress; }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  :root[data-theme="dark"] .btn.primary, :root:not([data-theme="light"]) .btn.primary { color: #06171c; }
+  .btn.primary:hover { filter: brightness(1.08); color: #fff; }
+  :root[data-theme="dark"] .btn.primary:hover { color: #06171c; }
+  .hotkey { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  .verdict { display: flex; flex-direction: column; gap: 10px; }
+  .test-row {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .test-row:last-child { border-bottom: 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .dot.ok { background: var(--ok); }
+  .dot.bad { background: var(--bad); }
+  .test-row .msg { color: var(--muted); }
+  .test-row.fail .msg { color: var(--bad); }
+
+  .banner {
+    padding: 12px 16px;
+    border-radius: 9px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .banner.ok { background: var(--ok-soft); color: var(--ok); }
+  .banner.bad { background: var(--bad-soft); color: var(--bad); }
+
+  .diff { display: grid; gap: 1px; background: var(--line-soft); }
+  .diff > div { background: var(--surface); padding: 10px 14px; }
+  .diff h4 {
+    margin: 0 0 6px;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .diff pre {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 190px;
+    overflow: auto;
+  }
+  @media (min-width: 720px) { .diff.three { grid-template-columns: 1fr 1fr 1fr; } }
+
+  .boot {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: var(--ground);
+    z-index: 20;
+    padding: 24px;
+    text-align: center;
+  }
+  .boot .inner { max-width: 440px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .boot .mark { font-size: 24px; }
+  .boot p { margin: 0; color: var(--muted); font-size: 13.5px; }
+  .pulse { width: 120px; height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .pulse i { display: block; width: 40%; height: 100%; background: var(--accent); animation: slide 1.1s ease-in-out infinite; }
+  @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+  @media (prefers-reduced-motion: reduce) { .pulse i { animation: none; width: 100%; } }
+
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .rail { border-right: 0; border-bottom: 1px solid var(--line); }
+    .brand { padding: 14px 16px 10px; }
+    .score { padding: 10px 16px; }
+    nav.tasks {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 10px 16px;
+      flex: 0 0 auto;
+    }
+    .topic { display: none; }
+    .task-btn {
+      width: auto;
+      flex: 0 0 auto;
+      grid-template-columns: auto auto;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      gap: 6px;
+    }
+    .task-btn .name, .task-btn .pts { display: none; }
+    .task-btn .tid { font-size: 13px; }
+    .task-btn.done { border-color: var(--ok); }
+    .task-btn.done .tid { color: var(--ok); }
+    .rail-foot { display: none; }
+    .pane { padding: 18px 16px 40px; }
+  }
+</style>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <span class="mark">Тренажёр <em>FAIO</em></span>
+      <span class="sub">отборочный тур · 20 сентября</span>
+    </div>
+    <div class="score">
+      <span class="label">Набрано</span>
+      <span class="value" id="score-value">0 / 290</span>
+    </div>
+    <nav class="tasks" id="tasklist" aria-label="Список задач"></nav>
+    <div class="rail-foot">
+      Решение читает данные из <code>sys.stdin</code> и печатает ответ.
+      Тесты генерируются заново при каждой проверке.
+    </div>
+  </aside>
+
+  <main class="pane">
+    <div class="pane-inner">
+      <header class="task-head">
+        <div class="kicker" id="task-kicker"></div>
+        <h1 id="task-title">Загрузка…</h1>
+      </header>
+
+      <section class="card">
+        <div class="card-bar"><span>Условие</span><span id="task-source"></span></div>
+        <pre class="statement" id="statement"></pre>
+      </section>
+
+      <section class="card">
+        <div class="card-bar">
+          <span id="code-name">solution.py</span>
+          <span class="hotkey">Ctrl/Cmd + Enter — проверить</span>
+        </div>
+        <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea>
+      </section>
+
+      <div class="actions">
+        <button class="btn primary" id="btn-check">Проверить</button>
+        <button class="btn" id="btn-sample">Показать пример</button>
+        <button class="btn" id="btn-hint">Подсказка</button>
+        <button class="btn" id="btn-reset">Сбросить</button>
+      </div>
+
+      <section class="verdict" id="verdict"></section>
+    </div>
+  </main>
+</div>
+
+<div class="boot" id="boot">
+  <div class="inner">
+    <span class="mark">Тренажёр FAIO</span>
+    <div class="pulse" id="boot-pulse"><i></i></div>
+    <p id="boot-text">Готовим Python в браузере…</p>
+  </div>
+</div>
+
+<script type="text/plain" id="boot-py">
+from browser import window
+import io
+import json
+import random
+import sys
+
+SOURCES = {}
+MODULES = {}
+
+
+def boot(sources_json):
+    """Выполняет исходники задач и возвращает их описания."""
+    data = json.loads(sources_json)
+    meta = []
+    for tid in sorted(data):
+        src = data[tid]
+        SOURCES[tid] = src
+        ns = {"__name__": "faio_" + tid}
+        exec(src, ns)
+        MODULES[tid] = ns
+        meta.append({
+            "id": ns["ID"],
+            "title": ns["TITLE"],
+            "topic": ns["TOPIC"],
+            "level": ns["LEVEL"],
+            "points": ns["POINTS"],
+            "source": ns["SOURCE"],
+            "statement": ns["STATEMENT"].strip(),
+            "template": ns["TEMPLATE"],
+        })
+    return json.dumps(meta)
+
+
+def _run_user(code, data):
+    """Запускает решение ученика со своим stdin и перехватывает stdout."""
+    out = io.StringIO()
+    stdin = io.StringIO(data)
+    old_in, old_out = sys.stdin, sys.stdout
+    sys.stdin, sys.stdout = stdin, out
+    err = None
+    g = {"__name__": "__main__", "input": lambda *a: stdin.readline().rstrip("\n")}
+    try:
+        exec(code, g)
+    except BaseException as exc:
+        err = "%s: %s" % (type(exc).__name__, exc)
+    finally:
+        sys.stdin, sys.stdout = old_in, old_out
+    return out.getvalue(), err
+
+
+def run_test(tid, code, seed):
+    ns = MODULES[tid]
+    inp, payload = ns["gen"](random.Random(int(seed)))
+    out, err = _run_user(code, inp)
+    if err is not None:
+        return json.dumps({"ok": False, "error": err, "input": inp[:1500]})
+    ok, msg = ns["check"](inp, out, payload)
+    res = {"ok": bool(ok), "msg": msg}
+    if not ok:
+        res["input"] = inp[:1500]
+        res["out"] = out[:700]
+        res["expected"] = ns["solve"](inp)[:700]
+    return json.dumps(res)
+
+
+def sample(tid, seed):
+    ns = MODULES[tid]
+    inp, payload = ns["gen"](random.Random(int(seed)))
+    return json.dumps({"input": inp[:2500], "answer": ns["solve"](inp)[:900]})
+
+
+def hint(tid):
+    """Собирает авторское решение: solve и его вспомогательные функции."""
+    src = SOURCES[tid]
+    blocks, cur, name = [], [], None
+    for line in src.split("\n"):
+        if line.startswith("def "):
+            if cur:
+                blocks.append((name, "\n".join(cur).rstrip()))
+            name = line[4:].split("(")[0]
+            cur = [line]
+        elif cur:
+            if line and not line[0].isspace():
+                blocks.append((name, "\n".join(cur).rstrip()))
+                cur, name = [], None
+            else:
+                cur.append(line)
+    if cur:
+        blocks.append((name, "\n".join(cur).rstrip()))
+    keep = [body for nm, body in blocks if nm == "solve" or (nm or "").startswith("_")]
+    return json.dumps({"code": "\n\n".join(keep) if keep else "Решение недоступно."})
+
+
+window.faio_boot = boot
+window.faio_run_test = run_test
+window.faio_sample = sample
+window.faio_hint = hint
+</script>
+
+<script src="tasks.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.14.3/brython.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.14.3/brython_stdlib.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var TESTS_PER_TASK = { q13: 3, q12: 4, q14: 4 };
+  var DEFAULT_TESTS = 5;
+  var LEVELS = { 1: "разминка", 2: "средняя", 3: "сложная" };
+
+  var meta = [];
+  var byId = {};
+  var current = null;
+  var busy = false;
+
+  var el = {
+    boot: document.getElementById("boot"),
+    bootText: document.getElementById("boot-text"),
+    bootPulse: document.getElementById("boot-pulse"),
+    list: document.getElementById("tasklist"),
+    kicker: document.getElementById("task-kicker"),
+    title: document.getElementById("task-title"),
+    source: document.getElementById("task-source"),
+    statement: document.getElementById("statement"),
+    code: document.getElementById("code"),
+    codeName: document.getElementById("code-name"),
+    verdict: document.getElementById("verdict"),
+    score: document.getElementById("score-value"),
+    check: document.getElementById("btn-check"),
+    sample: document.getElementById("btn-sample"),
+    hint: document.getElementById("btn-hint"),
+    reset: document.getElementById("btn-reset")
+  };
+
+  // ---------- локальное хранилище (может быть недоступно) ----------
+  function store(key, value) {
+    try {
+      if (value === undefined) return localStorage.getItem(key);
+      localStorage.setItem(key, value);
+    } catch (e) { /* приватное окно — работаем без сохранения */ }
+    return null;
+  }
+  function solvedSet() {
+    try { return new Set(JSON.parse(store("faio.solved") || "[]")); }
+    catch (e) { return new Set(); }
+  }
+  function markSolved(id) {
+    var s = solvedSet();
+    s.add(id);
+    store("faio.solved", JSON.stringify(Array.from(s)));
+  }
+
+  // ---------- отрисовка ----------
+  function renderScore() {
+    var s = solvedSet();
+    var got = meta.reduce(function (a, t) { return a + (s.has(t.id) ? t.points : 0); }, 0);
+    var max = meta.reduce(function (a, t) { return a + t.points; }, 0);
+    el.score.textContent = got + " / " + max;
+  }
+
+  function renderList() {
+    var s = solvedSet();
+    el.list.textContent = "";
+    var topic = null;
+    meta.forEach(function (t) {
+      if (t.topic !== topic) {
+        topic = t.topic;
+        var h = document.createElement("div");
+        h.className = "topic";
+        h.textContent = topic;
+        el.list.appendChild(h);
+      }
+      var b = document.createElement("button");
+      b.className = "task-btn" + (s.has(t.id) ? " done" : "");
+      b.setAttribute("aria-current", String(t.id === (current && current.id)));
+      b.innerHTML =
+        '<span class="tid"></span><span class="name"></span><span class="pts"></span>';
+      b.querySelector(".tid").textContent = t.id;
+      b.querySelector(".name").textContent = t.title;
+      b.querySelector(".pts").textContent = s.has(t.id) ? "✓" : t.points;
+      b.addEventListener("click", function () { open(t.id); });
+      el.list.appendChild(b);
+    });
+  }
+
+  function open(id) {
+    if (busy) return;
+    current = byId[id];
+    var s = solvedSet();
+    el.kicker.textContent = "";
+    [
+      current.id,
+      current.points + " баллов",
+      LEVELS[current.level]
+    ].forEach(function (text, i) {
+      var c = document.createElement("span");
+      c.className = "chip" + (i === 1 ? " gold" : "");
+      c.textContent = text;
+      el.kicker.appendChild(c);
+    });
+    if (s.has(current.id)) {
+      var done = document.createElement("span");
+      done.className = "chip ok";
+      done.textContent = "решено";
+      el.kicker.appendChild(done);
+    }
+    el.title.textContent = current.title;
+    el.source.textContent = current.source;
+    el.statement.textContent = current.statement;
+    el.codeName.textContent = current.id + ".py";
+    el.code.value = store("faio.draft." + current.id) || current.template;
+    el.verdict.textContent = "";
+    renderList();
+    try { store("faio.last", current.id); } catch (e) {}
+  }
+
+  function card(title, body) {
+    var wrap = document.createElement("div");
+    wrap.className = "card";
+    var bar = document.createElement("div");
+    bar.className = "card-bar";
+    bar.innerHTML = "<span></span>";
+    bar.firstChild.textContent = title;
+    wrap.appendChild(bar);
+    wrap.appendChild(body);
+    return wrap;
+  }
+
+  function pane(label, text) {
+    var d = document.createElement("div");
+    var h = document.createElement("h4");
+    h.textContent = label;
+    var p = document.createElement("pre");
+    p.textContent = text || "(пусто)";
+    d.appendChild(h);
+    d.appendChild(p);
+    return d;
+  }
+
+  function banner(kind, text) {
+    var b = document.createElement("div");
+    b.className = "banner " + kind;
+    b.textContent = text;
+    return b;
+  }
+
+  // ---------- проверка ----------
+  function setBusy(state, label) {
+    busy = state;
+    el.check.disabled = state;
+    el.sample.disabled = state;
+    el.hint.disabled = state;
+    el.check.textContent = state ? (label || "Проверяю…") : "Проверить";
+  }
+
+  function frame() {
+    // rAF даёт отрисоваться перед долгим вычислением, но в фоновой вкладке
+    // он не срабатывает — поэтому дублируем таймером, иначе проверка зависнет
+    return new Promise(function (r) {
+      var done = false;
+      function finish() { if (!done) { done = true; r(); } }
+      requestAnimationFrame(function () { setTimeout(finish, 0); });
+      setTimeout(finish, 120);
+    });
+  }
+
+  async function check() {
+    if (busy || !current) return;
+    var code = el.code.value;
+    store("faio.draft." + current.id, code);
+    el.verdict.textContent = "";
+
+    var rows = document.createElement("div");
+    rows.className = "card";
+    el.verdict.appendChild(rows);
+
+    var total = TESTS_PER_TASK[current.id] || DEFAULT_TESTS;
+    var passed = 0;
+    setBusy(true);
+
+    for (var i = 1; i <= total; i++) {
+      var row = document.createElement("div");
+      row.className = "test-row";
+      row.innerHTML = '<span class="dot"></span><span></span><span class="msg"></span>';
+      row.children[1].textContent = "тест " + i + " из " + total;
+      row.children[2].textContent = "считаю…";
+      rows.appendChild(row);
+      await frame();
+
+      var res;
+      try {
+        res = JSON.parse(window.faio_run_test(current.id, code, Math.floor(Math.random() * 1e9)));
+      } catch (e) {
+        res = { ok: false, error: "не удалось запустить: " + (e.message || e) };
+      }
+
+      row.children[0].className = "dot " + (res.ok ? "ok" : "bad");
+      row.children[2].textContent = res.ok ? (res.msg || "ok") : (res.error || res.msg || "неверно");
+      if (!res.ok) row.className = "test-row fail";
+
+      if (res.ok) {
+        passed++;
+      } else {
+        if (res.error) {
+          el.verdict.appendChild(banner("bad", "Решение остановилось с ошибкой на тесте " + i + "."));
+          var d1 = document.createElement("div");
+          d1.className = "diff";
+          d1.appendChild(pane("Входные данные", res.input));
+          el.verdict.appendChild(card("Разбор теста " + i, d1));
+        } else {
+          el.verdict.appendChild(banner("bad", "Тест " + i + " не пройден: " + (res.msg || "неверный ответ")));
+          var d2 = document.createElement("div");
+          d2.className = "diff three";
+          d2.appendChild(pane("Входные данные", res.input));
+          d2.appendChild(pane("Ваш вывод", res.out));
+          d2.appendChild(pane("Правильный ответ", res.expected));
+          el.verdict.appendChild(card("Разбор теста " + i, d2));
+        }
+        break;
+      }
+      await frame();
+    }
+
+    setBusy(false);
+    if (passed === total) {
+      markSolved(current.id);
+      el.verdict.insertBefore(
+        banner("ok", "Зачтено: пройдены все " + total + " тестов, +" + current.points +
+          " баллов. Берите следующую задачу в списке."),
+        el.verdict.firstChild
+      );
+      if (!el.kicker.querySelector(".chip.ok")) {
+        var done = document.createElement("span");
+        done.className = "chip ok";
+        done.textContent = "решено";
+        el.kicker.appendChild(done);
+      }
+      renderScore();
+      renderList();
+    }
+  }
+
+  async function showSample() {
+    if (busy || !current) return;
+    setBusy(true, "Готовлю…");
+    await frame();
+    var data = JSON.parse(window.faio_sample(current.id, Math.floor(Math.random() * 1e9)));
+    el.verdict.textContent = "";
+    var d = document.createElement("div");
+    d.className = "diff";
+    d.appendChild(pane("Входные данные", data.input));
+    d.appendChild(pane("Правильный ответ", data.answer));
+    el.verdict.appendChild(card("Пример теста — можно проверить себя вручную", d));
+    setBusy(false);
+  }
+
+  async function showHint() {
+    if (busy || !current) return;
+    if (!window.confirm("Показать авторское решение? Сначала стоит попробовать самому.")) return;
+    setBusy(true, "Готовлю…");
+    await frame();
+    var data = JSON.parse(window.faio_hint(current.id));
+    el.verdict.textContent = "";
+    var body = document.createElement("pre");
+    body.className = "statement";
+    body.textContent = data.code;
+    el.verdict.appendChild(card("Авторское решение — спойлер", body));
+    setBusy(false);
+  }
+
+  // ---------- редактор ----------
+  el.code.addEventListener("keydown", function (e) {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      var s = this.selectionStart, t = this.selectionEnd;
+      this.value = this.value.slice(0, s) + "    " + this.value.slice(t);
+      this.selectionStart = this.selectionEnd = s + 4;
+    } else if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      check();
+    }
+  });
+  el.code.addEventListener("input", function () {
+    if (current) store("faio.draft." + current.id, this.value);
+  });
+  el.check.addEventListener("click", check);
+  el.sample.addEventListener("click", showSample);
+  el.hint.addEventListener("click", showHint);
+  el.reset.addEventListener("click", function () {
+    if (!current || busy) return;
+    if (!window.confirm("Вернуть исходную заготовку? Ваш код будет потерян.")) return;
+    el.code.value = current.template;
+    store("faio.draft." + current.id, current.template);
+  });
+
+  // ---------- запуск ----------
+  function fail(text) {
+    el.bootPulse.hidden = true;
+    el.bootText.textContent = text;
+  }
+
+  function start() {
+    if (!window.FAIO_SOURCES) return fail("Не загрузился список задач. Обновите страницу.");
+    if (!window.__BRYTHON__ && !window.brython) {
+      return fail("Не удалось загрузить Python (возможно, школьная сеть блокирует cdnjs.cloudflare.com). Попробуйте другую сеть или консольную версию тренажёра.");
+    }
+    try {
+      window.brython({ debug: 0, indexedDB: false });
+      window.__BRYTHON__.runPythonSource(document.getElementById("boot-py").textContent, "faio_boot");
+      meta = JSON.parse(window.faio_boot(JSON.stringify(window.FAIO_SOURCES)));
+    } catch (e) {
+      return fail("Python не запустился: " + (e.message || e));
+    }
+    meta.forEach(function (t) { byId[t.id] = t; });
+    renderScore();
+    var last = store("faio.last");
+    open(byId[last] ? last : meta[0].id);
+    el.boot.hidden = true;
+  }
+
+  if (document.readyState === "complete") setTimeout(start, 0);
+  else window.addEventListener("load", function () { setTimeout(start, 0); });
+})();
+</script>
