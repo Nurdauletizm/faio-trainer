@@ -85,7 +85,10 @@
     display: grid;
     grid-template-columns: minmax(250px, 300px) 1fr;
     gap: 0;
+    max-width: 100%;
   }
+  /* без этого широкий блок с условием растягивает всю сетку вбок */
+  .rail, .pane, .pane-inner, .card { min-width: 0; }
 
   /* ---------- левая колонка ---------- */
   .rail {
